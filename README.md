@@ -12,10 +12,10 @@ cd GBS-SBG
 ## Introduction
 This repository contains a curated reference file which can be used for serotyping Streptococcus agalactiae (Group B Streptococcus, or GBS), in silico with whole genome sequencing data. The reference file (GBS-SBG.fasta) is designed to be usable for both short-read mapping and assembly-based strategies.
 
-The fasta file is designed to be immediately usable with SRST2(https://github.com/katholt/srst2), but this only means the fasta headers have been formatted specially. Otherwise it should still usable for other reference-based typing pipelines.
+The fasta file is designed to be immediately usable with [SRST2](https://github.com/katholt/srst2), but this only means the fasta headers have been formatted specially. Otherwise it should still usable for other reference-based typing pipelines.
 
 To do an assembly-based call, the GBS-SBG.pl script is included. This script uses only core Perl modules.
-- It does require the BLAST+(https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download) suite of programs to be installed. The location can be specified with the -blast command line parameter.
+- It does require the [BLAST+](https://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download) suite of programs to be installed. The location can be specified with the -blast command line parameter.
 - It also requires the GBS-SBG.fasta file. The location can be specified with the -ref command line parameter. However, if this file can't be found, the script will attempt to download a copy directly from this repository.
 
 ## Short Read serotype calling
