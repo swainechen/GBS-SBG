@@ -2,14 +2,14 @@
 
 Group B Streptococcus Serotyping by Genome Sequencing
 
-* Quick Start (assuming you have BLAST+ installed and available on your path):
+## Quick Start (assuming you have BLAST+ installed and available on your path):
 ```
 git clone https://github.com/swainechen/GBS-SBG
 cd GBS-SBG
 ./GBS-SBG.pl <assembly fasta file> -name <some name>
 ```
 
-* Introduction
+## Introduction
 This repository contains a curated reference file which can be used for serotyping Streptococcus agalactiae (Group B Streptococcus, or GBS), in silico with whole genome sequencing data. The reference file (GBS-SBG.fasta) is designed to be usable for both short-read mapping and assembly-based strategies.
 
 The fasta file is designed to be immediately usable with SRST2, but this only means the fasta headers have been formatted specially. Otherwise it should still usable for other reference-based typing pipelines.
@@ -18,14 +18,14 @@ To do an assembly-based call, the GBS-SBG.pl script is included. This script use
 - It does require the BLAST+ suite of programs to be installed. The location can be specified with the -blast command line parameter.
 - It also requires the GBS-SBG.fasta file. The location can be specified with the -ref command line parameter. However, if this file can't be found, the script will attempt to download a copy directly from this repository.
 
-* Short Read serotype calling
+## Short Read serotype calling
 We recommend using SRST2. This fasta file is already formatted for SRST2, so you can run (for example):
 ```
 srst2 --input_pe strainA_1.fastq.gz strainA_2.fastq.gz --output strainA_test --log --gene_db GBS-SBG.fasta
 ```
 For details on SRST2 installation, options, and other documentation, we refer you to the SRST2 website.
 
-* Assembly-based serotype calling
+## Assembly-based serotype calling
 We have implemented a reasonably self-contained script that takes an assembly and produces a serotype call. You can use whatever assembly program you like. We do assume that you have an assembly for a single isolate (i.e. no mixtures or metagenomic assemblies).
 
 To run this, clone this repository (or just download the GBS-SBG.pl script):
@@ -68,7 +68,7 @@ The default cutoffs correspond to those used in SRST2 - at least 90% identity ov
 If you are running this on many assemblies, you should make sure the GBS-SBG.fasta reference is already downloaded and findable by the program. You can specify the location with the `-ref /path/to/GBS-SBG.fasta` parameter. The blast databases will then only be made once and reused for each time the program runs.
 You should also consider using the `-best` parameter, which will only output the "best" serotype call, along with any potential uncertainty flags.
 
-* Uncertainty flags (for assembly-based calling)
+## Uncertainty flags (for assembly-based calling)
 While the basic call only requires 90% identity over 90% of the reference sequence length, GBS-SBG.pl will provide some uncertainty information in the following cases:
 - Overall coverage < 99% of the reference sequence length
 - Overall identity < 99% averaged over the aligned length to the reference sequence
@@ -77,8 +77,8 @@ While the basic call only requires 90% identity over 90% of the reference sequen
 - The total BLASTN Bit Score for the next best serotype call is >95% of the total BLASTN Bit Score for the best hit
 When these fall further below certain threshholds, default behavior is to also report the next best hit. This can be suppressed with the `-best` option (i.e. only print the best call). Alternatively, more information (including all the BLASTN data) can be obtained by using the `-debug` option.
 
-* Authors
+## Authors
 Swaine Chen
 Suma Tiruvayipati
 
-* Reference
+## Reference
