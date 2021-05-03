@@ -357,6 +357,7 @@ foreach $serotype (sort {$serotype_scores->{$b} <=> $serotype_scores->{$a}} keys
     print join ("\t", $NAME, $serotype, $serotype_scores->{$serotype}, $serotype_coverages->{$serotype}, $serotype_ids->{$serotype}, $serotype_hits->{$serotype}, $contig_count, $serotype_nextbest->{$serotype}), "\n";
   } else {
     last if !$pass && $BEST_ONLY;
+    $i = 1 if !$pass && $i == 0;
     print join ("\t", $NAME, $serotype);
     @uncertainty = ();
     if ($serotype_nextbest->{$serotype} > $UNCERTAINTY->{MAX_NEXT}) {
@@ -472,7 +473,7 @@ sub get_blastn {
 
 sub print_help {
   print <<__HELP__;
-Usage: $0 <assembly_fasta_file> [ -name <string> ] [ -best ] [ -blastn <path_to_blastn> ] [ -ref <GBS-SBG references> ] [ -debug ]
+Usage: $0 <assembly_fasta_file> [ -name <string> ] [ -best ] [ -blastn <path_to_blastn> ] [ -ref <GBS-SBG references> ] [ -debug ] [ -verbose ]
 
 <assembly_fasta_file> should be a regular multi-fasta file with assembled contigs or a complete genome.
 You should specify the -name parameter, all output will be prefixed by that string. Defaults to the input filename.
@@ -485,6 +486,9 @@ The -best option only prints out one call (with possible uncertainty information
 
 Requires BLAST+ version $MIN_BLASTN_VERSION or above. Will look on your path, or you can specify the blastn binary with -blast.
 Requires GBS-SBG references (typically $REF_FASTA_BASE), will try looking in a few places, otherwise will try to pull directly from $GITHUB_REPO.
+
+The -debug switch prints debugging info to STDERR.
+The -verbose switch prints more information and outputs data for all hits, even if they don't pass the cutoffs.
 
 More complete documentation available at $GITHUB_REPO.
 __HELP__
