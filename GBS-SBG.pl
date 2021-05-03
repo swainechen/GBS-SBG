@@ -329,9 +329,9 @@ foreach $serotype (sort {$serotype_scores->{$b} <=> $serotype_scores->{$a}} keys
   if ($serotype_coverages->{$serotype} >= $TOTAL_MIN_COVERAGE &&
       $serotype_ids->{$serotype} >= $BLAST_MIN_PID) {
     $pass = 1;
-    $max_cov = $serotype_coverages->{$serotype} if $max_cov < $serotype_coverages->{$serotype};
-    $max_id = $serotype_ids->{$serotype} if $max_id < $serotype_ids->{$serotype};
   }
+  $max_cov = $serotype_coverages->{$serotype} if $max_cov < $serotype_coverages->{$serotype};
+  $max_id = $serotype_ids->{$serotype} if $max_id < $serotype_ids->{$serotype};
 }
 if (!$pass) {
   if ($VERBOSE) {
