@@ -77,7 +77,8 @@ While the basic call only requires 90% identity over 90% of the reference sequen
 - More than 1 blast hit (i.e. HSP) required to account for the total coverage of the reference sequence
 - More than 1 contig (i.e. from the input assembly) required to account for the total coverage of the reference sequence
 - The total BLASTN Bit Score for the next best serotype call is >95% of the total BLASTN Bit Score for the best hit
-When these fall further below certain threshholds, default behavior is to also report the next best hit. This can be suppressed with the `-best` option (i.e. only print the best call). Alternatively, more information (including all the BLASTN data) can be obtained by using the `-debug` option.
+
+When these fall further below certain threshholds, default behavior is to also report the next best hit. This can be suppressed with the `-best` option (i.e. only print the best call). Alternatively, more information (including all the BLASTN data) can be obtained by using the `-debug` option - specifying this also will result in persistence of the temporary directory and all the intermediate files.
 
 ## Authors
 - Suma Tiruvayipati
