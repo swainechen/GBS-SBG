@@ -65,6 +65,8 @@ The program will look in the same directory as the script itself for the GBS-SBG
 The program will also take care of making the blast databases, running blast, and then parsing the output to produce a call.
 The default cutoffs correspond to those used in SRST2 - at least 90% identity over at least 90% of the total length of the reference sequence is required, and the highest identity and coverage determine the "best" call.
 
+All output goes to STDOUT, so be sure to pipe it into a file if you want (especially if running on many assemblies).
+
 If you are running this on many assemblies, you should make sure the GBS-SBG.fasta reference is already downloaded and findable by the program. You can specify the location with the `-ref /path/to/GBS-SBG.fasta` parameter. The blast databases will then only be made once and reused for each time the program runs.
 You should also consider using the `-best` parameter, which will only output the "best" serotype call, along with any potential uncertainty flags.
 
