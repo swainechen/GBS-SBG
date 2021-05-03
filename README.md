@@ -81,7 +81,7 @@ While the basic call only requires 90% identity over 90% of the reference sequen
 When these fall further below certain threshholds, default behavior is to also report the next best hit. This can be suppressed with the `-best` option (i.e. only print the best call). Alternatively, more information (including all the BLASTN data) can be obtained by using the `-debug` option - specifying this also will result in persistence of the temporary directory and all the intermediate files.
 
 ## Authors
-- Suma Tiruvayipati
-- Swaine Chen
+- [Suma Tiruvayipati](https://github.com/stiruvayipati)
+- [Swaine Chen](https://github.com/swainechen)
 
 ## Reference
