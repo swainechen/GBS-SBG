@@ -60,8 +60,11 @@ my $serotype_coverages_contig;
 my @uncertainty;
 my $contig;
 my ($pid, $chld_in, $chld_out, $chld_err);
+my ($max_cov, $max_id);
+my $pass;
 my $show_help = 0;
 my $DEBUG = 0;
+my $VERBOSE = 0;	# show all hits
 my $BEST_ONLY = 0;	# better for automation if this is set
 
 # Some internal parameters
@@ -75,6 +78,7 @@ GetOptions (
   'blast=s' => \$BLASTN_BIN,
   'ref=s' => \$REF_FASTA_FULL,
   'best!' => \$BEST_ONLY,
+  'verbose!' => \$VERBOSE,
   'debug!' => \$DEBUG
 );
 
@@ -101,6 +105,7 @@ if ($show_help) {
   &print_help;
   exit;
 }
+$VERBOSE = 1 if $DEBUG;
 
 # make sure we have everything we need
 if ($DEBUG) {
@@ -176,7 +181,7 @@ open F, $BLASTOUT;
 @f = <F>;
 close F;
 $d = ();
-$DEBUG && print @f;
+$DEBUG && print "== BLASTN Results ==\n", @f, "== END BLASTN Results ==\n";
 
 # only take hits that are >90% identical
 # data structure: $d->{Serotype}->{Query}->{i}->{SSTART}
@@ -305,7 +310,7 @@ foreach $serotype (keys %$serotype_scores) {
   $serotype_coverages->{$serotype} /= $serotype_lengths->{$serotype};
 }
 $DEBUG && print "[GBS-SBG INFO] Main output follows below:\n";
-if ($DEBUG) {
+if ($VERBOSE) {
   print join ("\t", "# Name", "Serotype", "Total BitScore", "Total Coverage", "Percent ID", "Number of BLASTN Hits", "Number Contigs", "NextBest BitScore"), "\n";
 } else {
   print join ("\t", "# Name", "Serotype", "Uncertainty"), "\n";
@@ -316,8 +321,29 @@ foreach $serotype (sort {$serotype_scores->{$a} <=> $serotype_scores->{$b}} keys
   $serotype_nextbest->{$serotype} = $i/$serotype_scores->{$serotype};
   $i = $serotype_scores->{$serotype};
 }
+# first ensure we don't have a nontypeable
+$pass = 0;
+$max_cov = 0;
+$max_id = 0;
+foreach $serotype (sort {$serotype_scores->{$b} <=> $serotype_scores->{$a}} keys %$serotype_scores) {
+  if ($serotype_coverages->{$serotype} >= $TOTAL_MIN_COVERAGE &&
+      $serotype_ids->{$serotype} >= $BLAST_MIN_PID) {
+    $pass = 1;
+    $max_cov = $serotype_coverages->{$serotype} if $max_cov < $serotype_coverages->{$serotype};
+    $max_id = $serotype_ids->{$serotype} if $max_id < $serotype_ids->{$serotype};
+  }
+}
+if (!$pass) {
+  if ($VERBOSE) {
+    print join ("\t", $NAME, "NT", "0", "0", "0", "0", "0", "0"), "\n";
+  } else {
+    print join ("\t", $NAME, "NT", join (";", "MaxCov:$max_cov", "MaxID:$max_id")), "\n";
+  }
+}
+
 # we will print in decreasing order of total bitscore
-$i = 0;	# use this here to count output lines if not debug (max 2)
+# $i here is used to count output lines if not debug (max 2)
+$i = 0;
 foreach $serotype (sort {$serotype_scores->{$b} <=> $serotype_scores->{$a}} keys %$serotype_scores) {
   # count # of contigs required
   $contig_count = 0;
@@ -327,9 +353,10 @@ foreach $serotype (sort {$serotype_scores->{$b} <=> $serotype_scores->{$a}} keys
     $contig_count++;
     last if $contig_sum >= $serotype_coverages->{$serotype};
   }
-  if ($DEBUG) {
+  if ($VERBOSE) {
     print join ("\t", $NAME, $serotype, $serotype_scores->{$serotype}, $serotype_coverages->{$serotype}, $serotype_ids->{$serotype}, $serotype_hits->{$serotype}, $contig_count, $serotype_nextbest->{$serotype}), "\n";
   } else {
+    last if !$pass && $BEST_ONLY;
     print join ("\t", $NAME, $serotype);
     @uncertainty = ();
     if ($serotype_nextbest->{$serotype} > $UNCERTAINTY->{MAX_NEXT}) {
