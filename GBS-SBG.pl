@@ -20,6 +20,7 @@ my $BLASTN_BIN = "";
 my $MIN_BLASTN_VERSION = "2.7.0";
 my $BLASTN_COMMAND;
 my $GITHUB_REPO = "https://github.com/swainechen/GBS-SBG";
+my $GITHUB_REF_FASTA = "https://raw.githubusercontent.com/swainechen/GBS-SBG/main/GBS-SBG.fasta";
 my $REF_FASTA_BASE = "GBS-SBG.fasta";
 my $REF_FASTA_FULL = "";
 my $USE_STDIN = 0;
@@ -142,7 +143,7 @@ if (-f $REF_FASTA_FULL) {
   }
 }
 if ($REF_FASTA_FULL eq "" || !-f $REF_FASTA_FULL) {
-  $ff = File::Fetch->new(uri => "$GITHUB_REPO/$REF_FASTA_BASE");
+  $ff = File::Fetch->new(uri => "$GITHUB_REF_FASTA");
   $REF_FASTA_FULL = $ff->fetch( to => $TEMPDIR );
   chdir($TEMPDIR);
   $pid = open3($chld_in, $chld_out, $chld_err, "makeblastdb -in $REF_FASTA_FULL -dbtype nucl");
