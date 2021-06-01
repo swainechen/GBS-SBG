@@ -53,15 +53,6 @@ my $serotype;
 # keyed on serotype, then should have SCORE, LENGTH, COVERAGE, FOOTPRINT, ID, HITS, NEXTBEST, COVERAGES_CONTIG
 my $sdata;
 
-#my $serotype_scores;
-#my $serotype_lengths;
-#my $serotype_coverages;
-#my $serotype_footprint;
-#my $serotype_ids;
-#my $serotype_hits;
-#my $serotype_nextbest;
-#my $serotype_coverages_contig;
-
 my @uncertainty;
 my $contig;
 my ($pid, $chld_in, $chld_out, $chld_err);
@@ -320,7 +311,6 @@ foreach $serotype (keys %$sdata) {
   foreach $i (0..$#start) {
     $sdata->{$serotype}->{COVERAGE} += ($end[$i] - $start[$i] + 1);
     $sdata->{$serotype}->{ID} += ($end[$i] - $start[$i] + 1) * $id[$i];
-#    $serotype_footprint += ($end[$i] - $start[$i] + 1);
   }
   $sdata->{$serotype}->{ID} /= $sdata->{$serotype}->{COVERAGE};
   $sdata->{$serotype}->{COVERAGE} /= $sdata->{$serotype}->{LENGTH};
