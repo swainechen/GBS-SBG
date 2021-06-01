@@ -51,17 +51,16 @@ my $contig_sum;
 my $serotype;
 
 # keyed on serotype, then should have SCORE, LENGTH, COVERAGE, FOOTPRINT, ID, HITS, NEXTBEST, COVERAGES_CONTIG
-my $serotype_data;
-$serotype_data->{SCORE} = 0;
+my $sdata;
 
-my $serotype_scores;
-my $serotype_lengths;
-my $serotype_coverages;
+#my $serotype_scores;
+#my $serotype_lengths;
+#my $serotype_coverages;
 #my $serotype_footprint;
-my $serotype_ids;
-my $serotype_hits;
-my $serotype_nextbest;
-my $serotype_coverages_contig;
+#my $serotype_ids;
+#my $serotype_hits;
+#my $serotype_nextbest;
+#my $serotype_coverages_contig;
 
 my @uncertainty;
 my $contig;
@@ -218,11 +217,11 @@ foreach $i (0..$#f) {
   next if ($g[2] <= $BLAST_MIN_PID);
   next if ($g[3] <= $BLAST_MIN_LEN);
   $serotype = parse_serotype($g[1]);
-  if (!defined $serotype_scores->{$serotype}) {
-    $serotype_scores->{$serotype} = 0;
-    $serotype_lengths->{$serotype} = $g[9];
+  if (!defined $sdata->{$serotype}->{SCORE}) {
+    $sdata->{$serotype}->{SCORE} = 0;
+    $sdata->{$serotype}->{LENGTH} = $g[9];
   }
-  $serotype_scores->{$serotype} += $g[14];	# bitscore
+  $sdata->{$serotype}->{SCORE} += $g[14];	# bitscore
   $d->{$serotype}->{$g[0]}->{$i}->{PID} = $g[2];
   $d->{$serotype}->{$g[0]}->{$i}->{LEN} = $g[3];
   if ($g[12] eq "minus" || $g[12] eq "-" || $g[11] < $g[10]) {
@@ -236,9 +235,9 @@ foreach $i (0..$#f) {
 }
 # main call is based on highest total bitscore, but have to check for >90% coverage
 # collapse to highest ID per serotype to do some checking
-foreach $serotype (keys %$serotype_scores) {
-  $serotype_coverages->{$serotype} = 0;
-  $serotype_coverages_contig->{$serotype} = ();
+foreach $serotype (keys %$sdata) {
+  $sdata->{$serotype}->{COVERAGE} = 0;
+  $sdata->{$serotype}->{CONTIGCOV} = ();
   @start = ();
   @end = ();
   @id = ();
@@ -278,7 +277,7 @@ foreach $serotype (keys %$serotype_scores) {
     }
     # we should have nonoverlapping intervals now
     foreach $i (0..$#start_c) {
-      $serotype_coverages_contig->{$serotype}->{$contig} += ($end_c[$i] - $start_c[$i] + 1) / $serotype_lengths->{$serotype};
+      $sdata->{$serotype}->{CONTIGCOV}->{$contig} += ($end_c[$i] - $start_c[$i] + 1) / $sdata->{$serotype}->{LENGTH};
     }
   }
   # need to re-sort the coordinates because we aggregated across contigs
@@ -286,7 +285,7 @@ foreach $serotype (keys %$serotype_scores) {
   @start = @start[@index];
   @end = @end[@index];
   @id = @id[@index];
-  $serotype_hits->{$serotype} = scalar @start;
+  $sdata->{$serotype}->{HITS} = scalar @start;
   # merge from the back
   foreach $i (reverse 1..$#start) {
     # @start should already be sorted by start coordinates
@@ -319,12 +318,12 @@ foreach $serotype (keys %$serotype_scores) {
   }
   # we should have nonoverlapping intervals now
   foreach $i (0..$#start) {
-    $serotype_coverages->{$serotype} += ($end[$i] - $start[$i] + 1);
-    $serotype_ids->{$serotype} += ($end[$i] - $start[$i] + 1) * $id[$i];
+    $sdata->{$serotype}->{COVERAGE} += ($end[$i] - $start[$i] + 1);
+    $sdata->{$serotype}->{ID} += ($end[$i] - $start[$i] + 1) * $id[$i];
 #    $serotype_footprint += ($end[$i] - $start[$i] + 1);
   }
-  $serotype_ids->{$serotype} /= $serotype_coverages->{$serotype};
-  $serotype_coverages->{$serotype} /= $serotype_lengths->{$serotype};
+  $sdata->{$serotype}->{ID} /= $sdata->{$serotype}->{COVERAGE};
+  $sdata->{$serotype}->{COVERAGE} /= $sdata->{$serotype}->{LENGTH};
 }
 $DEBUG && print "[GBS-SBG INFO] Main output follows below:\n";
 if ($VERBOSE) {
@@ -334,21 +333,21 @@ if ($VERBOSE) {
 }
 # calculate the bitscore differential to the next best hit
 $i = 0;
-foreach $serotype (sort {$serotype_scores->{$a} <=> $serotype_scores->{$b}} keys %$serotype_scores) {
-  $serotype_nextbest->{$serotype} = $i/$serotype_scores->{$serotype};
-  $i = $serotype_scores->{$serotype};
+foreach $serotype (sort {$sdata->{$a}->{SCORE} <=> $sdata->{$b}->{SCORE}} keys %$sdata) {
+  $sdata->{$serotype}->{NEXTBEST} = $i/$sdata->{$serotype}->{SCORE};
+  $i = $sdata->{$serotype}->{SCORE};
 }
 # first ensure we don't have a nontypeable
 $pass = 0;
 $max_cov = 0;
 $max_id = 0;
-foreach $serotype (sort {$serotype_scores->{$b} <=> $serotype_scores->{$a}} keys %$serotype_scores) {
-  if ($serotype_coverages->{$serotype} >= $TOTAL_MIN_COVERAGE &&
-      $serotype_ids->{$serotype} >= $BLAST_MIN_PID) {
+foreach $serotype (sort {$sdata->{$b}->{SCORE} <=> $sdata->{$a}->{SCORE}} keys %$sdata) {
+  if ($sdata->{$serotype}->{COVERAGE} >= $TOTAL_MIN_COVERAGE &&
+      $sdata->{$serotype}->{ID} >= $BLAST_MIN_PID) {
     $pass = 1;
   }
-  $max_cov = $serotype_coverages->{$serotype} if $max_cov < $serotype_coverages->{$serotype};
-  $max_id = $serotype_ids->{$serotype} if $max_id < $serotype_ids->{$serotype};
+  $max_cov = $sdata->{$serotype}->{COVERAGE} if $max_cov < $sdata->{$serotype}->{COVERAGE};
+  $max_id = $sdata->{$serotype}->{ID} if $max_id < $sdata->{$serotype}->{ID};
 }
 if (!$pass) {
   if ($VERBOSE) {
@@ -361,33 +360,33 @@ if (!$pass) {
 # we will print in decreasing order of total bitscore
 # $i here is used to count output lines if not debug (max 2)
 $i = 0;
-foreach $serotype (sort {$serotype_scores->{$b} <=> $serotype_scores->{$a}} keys %$serotype_scores) {
+foreach $serotype (sort {$sdata->{$b}->{SCORE} <=> $sdata->{$a}->{SCORE}} keys %$sdata) {
   # count # of contigs required
   $contig_count = 0;
   $contig_sum = 0;
-  foreach $contig (sort {$serotype_coverages_contig->{$serotype}->{$b} <=> $serotype_coverages_contig->{$serotype}->{$a}} keys %{$serotype_coverages_contig->{$serotype}}) {
-    $contig_sum += $serotype_coverages_contig->{$serotype}->{$contig};
+  foreach $contig (sort {$sdata->{$serotype}->{CONTIGCOV}->{$b} <=> $sdata->{$serotype}->{CONTIGCOV}->{$a}} keys %{$sdata->{$serotype}->{CONTIGCOV}}) {
+    $contig_sum += $sdata->{$serotype}->{CONTIGCOV}->{$contig};
     $contig_count++;
-    last if $contig_sum >= $serotype_coverages->{$serotype};
+    last if $contig_sum >= $sdata->{$serotype}->{COVERAGE};
   }
   if ($VERBOSE) {
-    print join ("\t", $NAME, $serotype, $serotype_scores->{$serotype}, $serotype_coverages->{$serotype}, $serotype_ids->{$serotype}, $serotype_hits->{$serotype}, $contig_count, $serotype_nextbest->{$serotype}), "\n";
+    print join ("\t", $NAME, $serotype, $sdata->{$serotype}->{SCORE}, $sdata->{$serotype}->{COVERAGE}, $sdata->{$serotype}->{ID}, $sdata->{$serotype}->{HITS}, $contig_count, $sdata->{$serotype}->{NEXTBEST}), "\n";
   } else {
     last if !$pass && $BEST_ONLY;
     $i = 1 if !$pass && $i == 0;
     print join ("\t", $NAME, $serotype);
     @uncertainty = ();
-    if ($serotype_nextbest->{$serotype} > $UNCERTAINTY->{MAX_NEXT}) {
-      push @uncertainty, "NextBitScore:$serotype_nextbest->{$serotype}";
+    if ($sdata->{$serotype}->{NEXTBEST} > $UNCERTAINTY->{MAX_NEXT}) {
+      push @uncertainty, "NextBitScore:$sdata->{$serotype}->{NEXTBEST}";
     }
-    if ($serotype_coverages->{$serotype} < $UNCERTAINTY->{MIN_COV}) {
-      push @uncertainty, "Coverage:$serotype_coverages->{$serotype}";
+    if ($sdata->{$serotype}->{COVERAGE} < $UNCERTAINTY->{MIN_COV}) {
+      push @uncertainty, "Coverage:$sdata->{$serotype}->{COVERAGE}";
     }
-    if ($serotype_ids->{$serotype} < $UNCERTAINTY->{MIN_PID}) {
-      push @uncertainty, "Pidentity:$serotype_ids->{$serotype}";
+    if ($sdata->{$serotype}->{ID} < $UNCERTAINTY->{MIN_PID}) {
+      push @uncertainty, "Pidentity:$sdata->{$serotype}->{ID}";
     }
-    if ($serotype_hits->{$serotype} > $UNCERTAINTY->{MAX_HITS}) {
-      push @uncertainty, "BLASTNHits:$serotype_hits->{$serotype}";
+    if ($sdata->{$serotype}->{HITS} > $UNCERTAINTY->{MAX_HITS}) {
+      push @uncertainty, "BLASTNHits:$sdata->{$serotype}->{HITS}";
     }
     if ($contig_count > $UNCERTAINTY->{MAX_CONTIGS}) {
       push @uncertainty, "Contigs:$contig_count";
@@ -400,8 +399,8 @@ foreach $serotype (sort {$serotype_scores->{$b} <=> $serotype_scores->{$a}} keys
     $i++;
     last if $BEST_ONLY;
     last if ($i >= 2);
-    next if ($serotype_nextbest->{$serotype} > $UNCERTAINTY->{MIN_NEXT_PRINT});
-    last if ($serotype_coverages->{$serotype} >= $TOTAL_MIN_COVERAGE && $serotype_ids->{$serotype} >= $BLAST_MIN_PID && $contig_count == 1);
+    next if ($sdata->{$serotype}->{NEXTBEST} > $UNCERTAINTY->{MIN_NEXT_PRINT});
+    last if ($sdata->{$serotype}->{COVERAGE} >= $TOTAL_MIN_COVERAGE && $sdata->{$serotype}->{ID} >= $BLAST_MIN_PID && $contig_count == 1);
   }
 }
 
