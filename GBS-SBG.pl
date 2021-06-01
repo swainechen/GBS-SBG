@@ -49,14 +49,20 @@ my (@start_c, @end_c, @id_c);
 my $contig_count;
 my $contig_sum;
 my $serotype;
+
+# keyed on serotype, then should have SCORE, LENGTH, COVERAGE, FOOTPRINT, ID, HITS, NEXTBEST, COVERAGES_CONTIG
+my $serotype_data;
+$serotype_data->{SCORE} = 0;
+
 my $serotype_scores;
 my $serotype_lengths;
 my $serotype_coverages;
-my $serotype_footprint;
+#my $serotype_footprint;
 my $serotype_ids;
 my $serotype_hits;
 my $serotype_nextbest;
 my $serotype_coverages_contig;
+
 my @uncertainty;
 my $contig;
 my ($pid, $chld_in, $chld_out, $chld_err);
@@ -189,6 +195,7 @@ $DEBUG && print "== BLASTN Results ==\n", @f, "== END BLASTN Results ==\n";
 # data structure: $d->{Serotype}->{Query}->{i}->{PID}
 # data structure: $d->{Serotype}->{Query}->{i}->{LEN}
 # data structure: $d->{Serotype}->{Query}->{i}->{BITSCORE}
+# i is just a counter, i.e. line number in the blast output, can treat like a unique ID
 # columns:
 # 0 - qseqid
 # 1 - sseqid
@@ -284,27 +291,37 @@ foreach $serotype (keys %$serotype_scores) {
   foreach $i (reverse 1..$#start) {
     # @start should already be sorted by start coordinates
     if ($start[$i] <= $end[$i-1]) {
-      # aggregate the identity here
-      if ($id[$i-1] > $id[$i]) {
-        $id[$i-1] = ( ($end[$i-1] - $start[$i-1] + 1) * $id[$i-1]  +
-                      ($end[$i] - $end[$i-1]) * $id[$i]          ) /
-                    ( $end[$i] - $start[$i-1] + 1 )
+      if ($end[$i-1] < $end[$i]) {
+        # aggregate the identity here
+        if ($id[$i-1] > $id[$i]) {
+          $id[$i-1] = ( ($end[$i-1] - $start[$i-1] + 1) * $id[$i-1]  +
+                        ($end[$i] - $end[$i-1]) * $id[$i]          ) /
+                      ( $end[$i] - $start[$i-1] + 1 );
+        } else {
+          $id[$i-1] = ( ($start[$i] - $start[$i-1]) * $id[$i-1]  +
+                        ($end[$i] - $start[$i] + 1) * $id[$i]  ) /
+                      ( $end[$i] - $start[$i-1] + 1 );
+        }
+        $end[$i-1] = $end[$i];
+        splice @start, $i, 1;
+        splice @end, $i, 1;
+        splice @id, $i, 1;
       } else {
-        $id[$i-1] = ( ($start[$i] - $start[$i-1]) * $id[$i-1]  +
-                      ($end[$i] - $start[$i] + 1) * $id[$i]  ) /
-                    ( $end[$i] - $start[$i-1] + 1 )
+      # interval $i is completely contained within interval $i-1
+      # if $id[$i] > $id[$i-1] we could increase the overall identity...but
+      # this doesn't seem to make sense, since at this point interval $i-1 is
+      # a single blast hit, so instead just get rid of interval $i
+        splice @start, $i, 1;
+        splice @end, $i, 1;
+        splice @id, $i, 1;
       }
-      $end[$i-1] = $end[$i];
-      splice @start, $i, 1;
-      splice @end, $i, 1;
-      splice @id, $i, 1;
     }
   }
   # we should have nonoverlapping intervals now
   foreach $i (0..$#start) {
     $serotype_coverages->{$serotype} += ($end[$i] - $start[$i] + 1);
     $serotype_ids->{$serotype} += ($end[$i] - $start[$i] + 1) * $id[$i];
-    $serotype_footprint += ($end[$i] - $start[$i] + 1);
+#    $serotype_footprint += ($end[$i] - $start[$i] + 1);
   }
   $serotype_ids->{$serotype} /= $serotype_coverages->{$serotype};
   $serotype_coverages->{$serotype} /= $serotype_lengths->{$serotype};
