@@ -87,3 +87,7 @@ Note if you're using the GBS-SBG databases with SRST2, you should refer to the [
 - [Swaine Chen](https://github.com/swainechen)
 
 ## Reference
+- Tiruvayipati, et al. "GBS-SBG - GBS Serotyping by Genome Sequencing." Microb Genom. 2021 Dec;7(12). doi: 10.1099/mgen.0.000688
+- [Pubmed](https://pubmed.ncbi.nlm.nih.gov/34895403/)
+- [Microbial Genomics](https://www.microbiologyresearch.org/content/journal/mgen/10.1099/mgen.0.000688)
+- Note this was originally released as a preprint on [bioRxiv](https://www.biorxiv.org/content/10.1101/2021.06.16.448630v1), but that version is superseded by the Microbial Genomics publication.
