@@ -166,7 +166,7 @@ if ($USE_STDIN) {
   $INFILE = File::Spec->rel2abs(File::Spec->catfile($TEMPDIR, "STDIN_INPUT"));
 }
 $BLASTOUT = File::Spec->rel2abs(File::Spec->catfile($TEMPDIR, "BLAST_OUTPUT"));
-$BLASTN_COMMAND = "blastn -db $REF_FASTA_FULL -query $INFILE -out $BLASTOUT -outfmt '6 qseqid sseqid pident length mismatch gapopen qlen qstart qend slen sstart send sstrand evalue bitscore'";
+$BLASTN_COMMAND = "$BLASTN_BIN -db $REF_FASTA_FULL -query $INFILE -out $BLASTOUT -outfmt '6 qseqid sseqid pident length mismatch gapopen qlen qstart qend slen sstart send sstrand evalue bitscore'";
 $DEBUG && print STDERR "[GBS-SBG INFO] Running blast: $BLASTN_COMMAND\n";
 $pid = open3($chld_in, $chld_out, $chld_err, $BLASTN_COMMAND);
 waitpid($pid, 0);
